@@ -5,7 +5,7 @@ load("~/Danbooru R/danbooru.RData")
 library(jsonlite)
 library(httr)
 library(tools)
-blacklist=c("overwatch","gawr_gura","kevcrexx","coro_fae","dokibird_(vtuber)","kson","doki_doki_literature_club","rwby","onepiece","kiryu_coco","mavixtious","zuharu")
+blacklist=c("overwatch","gawr_gura","kevcrexx","coro_fae","dokibird_(vtuber)","kson","doki_doki_literature_club","rwby","onepiece","kiryu_coco","mavixtious","zuharu","ilulu_(maidragon)","hara_(harayutaka)","eufoniuz","sleepy_frippy","mori_calliope","seasonanimes","minato_aqua","uruha rushia","nekomata_okayu","auxtasy","rwby","inugami_korone","sataen","cedric_(gear_art)","tsuranukko","minobey","watson_amelia","andreev8000","dynoxter","sleeptopi")
 #library(httr2)
 #library(rvest)
 #library(curl)
@@ -14,6 +14,7 @@ if (exists("ds")==FALSE) ds=as.Date("2024-07-31","%Y-%m-%d") #auto advance date 
 if (exists("nd")==FALSE) nd=1
 if (exists("date1")==FALSE) date1=c(ds[1] + nd)
 date1[nd]=c(ds[1] + nd)
+print(date1[nd])
 res1=GET(url=paste0("https://danbooru.donmai.us/explore/posts/popular.json?date=",date1[nd],"&scale=day&limit=200&login=theo1996&api_key=",api.key))
 if (status_code(res1) != 200) {
   stop("Failed to fetch data from Danbooru API")
@@ -35,91 +36,102 @@ for ( i in seq(1+e,length(x2))) {
   cat("No.",i,"\n")
   #print(c("https://danbooru.donmai.us/posts/",x2[[i]][["id"]]),sep="")
   cat(c("https://danbooru.donmai.us/posts/",x2[[i]][["id"]]),"\n",sep="")
- # cat(paste0("https://danbooru.donmai.us/posts/",x2[[i]][["id"]]),"\n")
+  # cat(paste0("https://danbooru.donmai.us/posts/",x2[[i]][["id"]]),"\n")
   tags = strsplit(x2[[i]][["tag_string"]]," ")[[1]]
   bm = tags %in% blacklist
   bma = 0
   for (ib in seq(1:length(bm))) {
     if (bm[ib]==TRUE){bma=1
-      #print(c(bm[ib],tags[ib],"\n"))
-      cat(c(bm[ib],tags[ib],"\n"))
-      break
-      }
+    #print(c(bm[ib],tags[ib],"\n"))
+    cat(c(bm[ib],tags[ib],"\n"))
+    break
+    }
   }
- # seq_along(bm)
+  # seq_along(bm)
   #seq_
- 
+  
   if ( length(x2[[i]][["media_asset"]][["variants"]])!=0 & bma==0 ){#if loli gold memb or blackilisted
     for ( b in 1:length(x2[[i]][["media_asset"]][["variants"]]) ) 
       f=1
-      iter=0
-      if ( x2[[i]][["media_asset"]][["file_ext"]] != "zip") {#if not video
-        if (x2[[i]][["media_asset"]][["variants"]][[b]][["type"]] == "original") {
-          cat(b)
-          c=b
-           while (f!=0 & iter<5) { # f=0(success) repeat if error
-              tryCatch( {#no immediate interupt if error
-          f=download.file( url =
-                           x2[[i]][["media_asset"]][["variants"]][[b]][["url"]],destfile =
-                           paste0(dir,
-                                  gsub("[^a-zA-Z0-9._-]", "_",
-                                       substr(paste0("__",x2[[i]][["tag_string_character"]],
-                                                     "_",x2[[i]][["tag_string_copyright"]],
-                                                     "_drawn_by_",x2[[i]][["tag_string_artist"]],
-                                                     "__"),1,170)),x2[[i]][["md5"]],".",
-                                  x2[[i]][["file_ext"]]
-                           ) , method = "auto" ,quiet = TRUE ,mode = "wb",cacheOK = FALSE)},
-          error =function(e)  {
-                Sys.sleep(8)
-                iter=iter+1
+    iter=0
+    if ( x2[[i]][["media_asset"]][["file_ext"]] != "zip") {#if not video
+      if (x2[[i]][["media_asset"]][["variants"]][[b]][["type"]] == "original") {
+        cat(b)
+        c=b
+        while (f!=0 & iter<5) { # f=0(success) repeat if error
+          tryCatch( {#no immediate interupt if error
+            f=download.file( url =
+                               x2[[i]][["media_asset"]][["variants"]][[b]][["url"]],destfile =
+                               paste0(dir,
+                                      gsub("[^a-zA-Z0-9._-]", "_",
+                                           substr(paste0("__",x2[[i]][["tag_string_character"]],
+                                                         "_",x2[[i]][["tag_string_copyright"]],
+                                                         "_drawn_by_",x2[[i]][["tag_string_artist"]],
+                                                         "__"),1,170)),x2[[i]][["md5"]],".",
+                                      x2[[i]][["file_ext"]]
+                               ) , method = "auto" ,quiet = TRUE ,mode = "wb",cacheOK = FALSE)},
+            error =function(e)  {
+              Sys.sleep(8)
+              iter=iter+1
               
-                if (iter>=5) {stop("Failed to DL 5 times, check internet connection.")}else{cat(c("retrying",iter,x2[[i]][["id"]]))}
-          })
-           }
-        }
-      } else if (x2[[i]][["media_asset"]][["variants"]][[b]][["type"]] == "sample") { #if video 
-          cat(x2[[i]][["media_asset"]][["variants"]][[b]][["type"]])
-          c=b 
-          while (f!=0 & iter<5) { # f=0(success) repeat if error
-          tryCatch( {
-           f=download.file( url = x2[[i]][["media_asset"]][["variants"]][[b]][["url"]],destfile =
-                           paste0(dir,gsub("[^a-zA-Z0-9._-]", "_",substr(
-                             paste0(#w7 can only have 256 chars total
-                               "__",x2[[i]][["tag_string_character"]],"_",
-                               x2[[i]][["tag_string_copyright"]],"_drawn_by_"
-                               ,x2[[i]][["tag_string_artist"]],"__")
-                             ,1,170)),x2[[i]][["md5"]],".",
-                             x2[[i]][["media_asset"]][["variants"]][[b]][["file_ext"]]) , method = "auto",quiet = FALSE ,mode = "wb",cacheOK = TRUE)},
-           error =function(e) {
-             Sys.sleep(8)
-             iter=iter+1
-             if (iter>=5) {stop("Failed to DL 5 times, check internet connection.")}else{cat(c("retrying",iter,x2[[i]][["id"]]))}
-               })
+              if (iter>=5) {stop("Failed to DL 5 times, check internet connection.")}else{cat(c("retrying",iter,x2[[i]][["id"]]))}
+            },   warning =function(e) {
+              Sys.sleep(8)
+              iter=iter+1
+              if (iter>=5) {stop("Failed to DL 5 times, check internet connection.")}else{cat(c("retrying ",iter,x2[[i]][["id"]]))}
+            }
+          )
         }
       }
-    }else if(bma==1){
-      cat("blacklisted tag:",tags[ib],"\n")
-  }else if ( length(x2[[i]][["media_asset"]][["variants"]])!=0){
+    } else if (x2[[i]][["media_asset"]][["variants"]][[b]][["type"]] == "sample") { #if video 
+      cat(x2[[i]][["media_asset"]][["variants"]][[b]][["type"]])
+      c=b 
+      while (f!=0 & iter<5) { # f=0(success) repeat if error
+        tryCatch( {
+          f=download.file( url = x2[[i]][["media_asset"]][["variants"]][[b]][["url"]],destfile =
+                             paste0(dir,gsub("[^a-zA-Z0-9._-]", "_",substr(
+                               paste0(#w7 can only have 256 chars total
+                                 "__",x2[[i]][["tag_string_character"]],"_",
+                                 x2[[i]][["tag_string_copyright"]],"_drawn_by_"
+                                 ,x2[[i]][["tag_string_artist"]],"__")
+                               ,1,170)),x2[[i]][["md5"]],".",
+                               x2[[i]][["media_asset"]][["variants"]][[b]][["file_ext"]]) , method = "auto",quiet = FALSE ,mode = "wb",cacheOK = TRUE)},
+          error =function(e) {
+            Sys.sleep(8)
+            iter=iter+1
+            if (iter>=5) {stop("Failed to DL 5 times, check internet connection.")}else{cat(c("retrying ",iter,x2[[i]][["id"]]))}
+          },
+          warning =function(e) {
+            Sys.sleep(8)
+            iter=iter+1
+            if (iter>=5) {stop("Failed to DL 5 times, check internet connection.")}else{cat(c("retrying ",iter,x2[[i]][["id"]]))}
+          }
+        )
+      }
+    }
+  }else if(bma==1){
+    cat("blacklisted tag:",tags[ib],"\n")
+  }else if ( length(x2[[i]][["media_asset"]][["variants"]])==0){
     cat("Probably a Gold Membership image only.External link:",x2[[i]][["source"]],"\n")
   }
   if ( bma==0 ){
-  cat("Variant:",c)
-  cat(x2[[i]][["media_asset"]][["variants"]][[c]][["type"]])
-  print(paste0(dir,gsub("[^a-zA-Z0-9._-]", "_",substr(
-    paste0(
-      "__",x2[[i]][["tag_string_character"]],"_",
-      x2[[i]][["tag_string_copyright"]],"_drawn_by_"
-      ,x2[[i]][["tag_string_artist"]],"__",x2[[i]][["md5"]])
-    ,1,200)),".",
-    x2[[i]][["media_asset"]][["variants"]][[c]][["file_ext"]]))
+    cat("Variant:",c)
+    cat(x2[[i]][["media_asset"]][["variants"]][[c]][["type"]])
+    print(paste0(dir,gsub("[^a-zA-Z0-9._-]", "_",substr(
+      paste0(
+        "__",x2[[i]][["tag_string_character"]],"_",
+        x2[[i]][["tag_string_copyright"]],"_drawn_by_"
+        ,x2[[i]][["tag_string_artist"]],"__",x2[[i]][["md5"]])
+      ,1,200)),".",
+      x2[[i]][["media_asset"]][["variants"]][[c]][["file_ext"]]))
   }
   Sys.sleep(1)
-if (i == 200) nd=nd+1
+  if (i == 200) nd=nd+1
 }
 sink()
 #}
 
-
+save.image("~/Danbooru R/danbooru.RData")
 ##write(res,"getHtml.json")
 ##testbooru section
 #res = GET(paste0("https://$theo1996:$",api.key,"@testbooru.donmai.us/posts/6.json&limit=200"))
@@ -247,4 +259,4 @@ sink()
 #   if (md5list[im]==x2[[ix]][["md5"]]) int[ix]=1
 #  }
 #}
-#frequency(int[])
+#frequency(int[])k
